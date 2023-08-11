@@ -50,3 +50,54 @@ It is known to have been deployed to: [Ropsten test-net](https://ropsten.ethersc
 ```
 
 **Note:** The actual gas used is 68131, but that can change if the cost of opcodes changes.  To avoid having to move the proxy to a different address, we opted to give excess gas.  Given the gas price, this may result in notable expenses, but since this only needs to be deployed once per chain that is acceptable.
+
+### Taiko Deployment
+
+deterministicDeploymentProxy address 
+```solidity
+0x4e59b44847b379578588920ca78fbf26c0b4956c
+```
+from:
+
+https://github.com/Arachnid/deterministic-deployment-proxy#proxy-address
+
+is produced by the following steps
+1. Send ETH to signer 
+```solidity
+0x3fab184622dc19b6109349b94811493bf2a45362
+``` 
+2. L2 Taiko RPC node endpoint must disable EIP-155 by setting Geth flag 
+```sh
+--rpc.allow-unprotected-txs=true
+```
+using this pull request for reference 
+https://github.com/taikoxyz/simple-taiko-node/pull/114
+3. Forward their signed message in ethers.js 
+```solidity
+0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222
+```
+example script:
+```js
+const ethers = require("ethers") // npm i ethers@5.7.2 https://github.com/smartcontractkit/full-blockchain-solidity-course-js/discussions/5139#discussioncomment-5444517
+
+const rpcURL = "<RPC_WITH_EIP-155-DISABLED>" // Your RPC URL goes here
+
+const provider = new ethers.providers.JsonRpcProvider(rpcURL)
+// const signer = new ethers.Wallet(Buffer.from(process.env.devTestnetPrivateKey, 'hex'), provider);
+
+createAndSendTx()
+
+
+async function createAndSendTx() {
+
+  const connectedNetworkObject = await provider.getNetwork();
+  const chainIdConnected = connectedNetworkObject.chainId;
+  console.log("chainIdConnected: "+ chainIdConnected)
+
+  const txSigned = await provider.sendTransaction("0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222");
+// const txSigned = await signer.sendTransaction("0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222");
+
+  console.log(txSigned)
+
+}
+```
